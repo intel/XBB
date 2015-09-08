@@ -44,11 +44,10 @@ static const char * sInverseSxSHName = "Inverse S*SH";
 TEST_CASE(sInverseSxSHName, "")
 {
     // time inverse S*SH with reference vs XBB
-    volatile TestValues tv = TestValues::get();
 
+    volatile const TestValues tv = TestValues::get();
     const int repeatCount = 1000000;
     
-    ref::Matrix4x4 refFinalTransform;
     // Compose a transform using traditional OO approach
     double refTime = 0.0;
     {
@@ -62,8 +61,7 @@ TEST_CASE(sInverseSxSHName, "")
                 ref::Matrix4x4 SH;
                 SH.makeShear3(tv.shearX, tv.shearY, tv.shearZ);
 
-                refFinalTransform = (S*SH).inverse();
-
+                *gRefFinalTransform = (S*SH).inverse();
             }
         }
     }
@@ -76,21 +74,19 @@ TEST_CASE(sInverseSxSHName, "")
         XBB_INLINE_BLOCK
         {                    
             for (int rep=0; rep < repeatCount; ++rep) {
-
                 xbb::Scale S(tv.scaleX, tv.scaleY, tv.scaleZ);
                 xbb::Shear3 SH(tv.shearX, tv.shearY, tv.shearZ);
 
-                (S*SH).inverse().to(xbbFinalTransform);
-
+                (S*SH).inverse().to(*gXbbFinalTransform);
             }
         }
     }
         
     
     std::cout << sInverseSxSHName << ":"<< std::endl;
-//    std::cout << "Ref Transform " << refFinalTransform << std::endl;
-//    std::cout << "xbb Transform " << xbbFinalTransform << std::endl;
-    TRANSFORMS_ARE_CLOSE(xbbFinalTransform, refFinalTransform);
+//    std::cout << "Ref Transform " << gRefFinalTransform << std::endl;
+//    std::cout << "xbb Transform " << gXbbFinalTransform << std::endl;
+    TRANSFORMS_ARE_CLOSE(*gXbbFinalTransform, *gRefFinalTransform);
     
     std::cout << "    ref Time " << refTime << std::endl;
     std::cout << "    xbb Time " << xbbTime << std::endl;

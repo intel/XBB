@@ -26,8 +26,10 @@
 #CXX=icpc
 #LD=icpc
 
-CXX=/opt/rh/devtoolset-2/root/usr/bin/g++
-LD=/opt/rh/devtoolset-2/root/usr/bin/g++
+#CXX=/opt/rh/devtoolset-2/root/usr/bin/g++
+#LD=/opt/rh/devtoolset-2/root/usr/bin/g++
+CXX=g++
+LD=g++
 
 RM=rm -rf
 OUT_DIR=bin

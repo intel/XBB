@@ -93,7 +93,6 @@ TEST_CASE(sPrecomputedSxSHxRxTName, "")
     
     const int repeatCount = 10000000;
     
-    ref::Matrix4x4 refFinalTransform;
     // Compose a transform using traditional OO approach
     // Precompute the individual components
     // and just time how long it takes to concatenate them
@@ -116,14 +115,13 @@ TEST_CASE(sPrecomputedSxSHxRxTName, "")
 
             for (int rep=0; rep < repeatCount; ++rep) {
 
-                refFinalTransform = (*S)*(*SH)*(*Rz)*(*Ry)*(*Rx)*(*T);
+                *gRefFinalTransform = (*S)*(*SH)*(*Rz)*(*Ry)*(*Rx)*(*T);
 
             }
         }
     }
     
     // Compose a transform using XBB
-    xbb::Matrix4x3 xbbFinalTransform;
     double xbbTime = 0.0;
     {
         
@@ -147,16 +145,16 @@ TEST_CASE(sPrecomputedSxSHxRxTName, "")
                 xbb::Shear3 SH(tv.shearX, tv.shearY, tv.shearZ);
                 xbb::Translation T(tv.translateX, tv.translateY, tv.translateZ);    
 
-                (S*SH*Rz*Ry*Rx*T).to(xbbFinalTransform);
+                (S*SH*Rz*Ry*Rx*T).to(*gXbbFinalTransform);
 
             }
         }
     }
         
     std::cout << sPrecomputedSxSHxRxTName << ":"<< std::endl;
-    //std::cout << "Ref Transform " << refFinalTransform << std::endl;
-    //std::cout << "xbb Transform " << xbbFinalTransform << std::endl;
-    TRANSFORMS_ARE_CLOSE(xbbFinalTransform, refFinalTransform);
+    //std::cout << "Ref Transform " << *gRefFinalTransform << std::endl;
+    //std::cout << "xbb Transform " << *gXbbFinalTransform << std::endl;
+    TRANSFORMS_ARE_CLOSE(*gXbbFinalTransform, *gRefFinalTransform);
     
     std::cout << "    ref Time " << refTime << std::endl;
     std::cout << "    xbb Time " << xbbTime << std::endl;

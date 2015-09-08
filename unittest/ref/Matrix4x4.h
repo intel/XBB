@@ -196,7 +196,7 @@ struct Matrix4x4
     }
 
     
-    ref::Matrix4x4 operator * (const ref::Matrix4x4 &iOther) {
+    ref::Matrix4x4 operator * (const ref::Matrix4x4 &iOther) const {
         ref::Matrix4x4 result;
         
         result.m[0][0] = m[0][0]*iOther.m[0][0] +
