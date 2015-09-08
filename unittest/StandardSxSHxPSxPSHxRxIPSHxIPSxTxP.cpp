@@ -182,11 +182,14 @@ void multiplySxSHxPSxPSHxRzxRyxRxxIPSPSHxT(
     const ref::Matrix4x4 & PSH,
     const ref::Matrix4x4 & P)
 {
-    // Small optimization so we only have to call inverse once
-    ref::Matrix4x4 PSPSH = PS*PSH;
-    ref::Matrix4x4 IPSPSH = PSPSH.inverse();
+    XBB_INLINE_BLOCK
+    {                    
+        // Small optimization so we only have to call inverse once
+        ref::Matrix4x4 PSPSH = PS*PSH;
+        ref::Matrix4x4 IPSPSH = PSPSH.inverse();
 
-    result = S*SH*PSPSH*Rz*Ry*Rx*IPSPSH*T*P;
+        result = S*SH*PSPSH*Rz*Ry*Rx*IPSPSH*T*P;
+    }
 }
     
 
@@ -202,10 +205,13 @@ void multiplySxSHxPSxPSHxRzxRyxRxxIPSPSHxT(
     const xbb::Shear3 & PSH,
     const xbb::ProxyMatrix4x3<ref::Matrix4x4> & P)
 {
-    auto PSPSH = PS*PSH;
-    auto IPSPSH = PSPSH.inverse();
+    XBB_INLINE_BLOCK
+    {                    
+        auto PSPSH = PS*PSH;
+        auto IPSPSH = PSPSH.inverse();
 
-    (S*SH*PSPSH*Rz*Ry*Rx*IPSPSH*T*P).to(result);
+        (S*SH*PSPSH*Rz*Ry*Rx*IPSPSH*T*P).to(result);
+    }
 }
 
 }

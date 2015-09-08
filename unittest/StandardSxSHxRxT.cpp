@@ -142,7 +142,10 @@ void multiplySxSHxRzxRyxRxxT(
     const ref::Matrix4x4 & Rx, 
     const ref::Matrix4x4 & T)
 {
-    result = S*SH*Rz*Ry*Rx*T;
+    XBB_INLINE_BLOCK
+    {                    
+        result = S*SH*Rz*Ry*Rx*T;
+    }
 }
     
 
@@ -155,7 +158,10 @@ void multiplySxSHxRzxRyxRxxT(
     const xbb::RotationX & Rx,
     const xbb::Translation & T)
 {
-   (S*SH*Rz*Ry*Rx*T).to(result);
+    XBB_INLINE_BLOCK
+    {                    
+        (S*SH*Rz*Ry*Rx*T).to(result);
+    }
 }
 
 }

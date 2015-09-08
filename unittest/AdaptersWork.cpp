@@ -35,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ref/Matrix4x4.h"
 #include "ref/Vec3.h"
 #include "AdaptRefToXbb.h"
+#include "FloatingPointComparisons.h"
 #include "TestValues.h"
 #include "TransformsAreClose.h"
 
@@ -81,25 +82,25 @@ TEST_CASE(sAdaptatersWorkName, "")
     {
 	ref::Vec3 rVec(1.0, 2.0, 3.0);
 	xbb::Scale xScale(rVec);
-	REQUIRE(rVec.x() == xScale.x);
-	REQUIRE(rVec.y() == xScale.y);
-	REQUIRE(rVec.z() == xScale.z);
+	REQUIRE(isEqual(rVec.x(), xScale.x));
+	REQUIRE(isEqual(rVec.y(), xScale.y));
+	REQUIRE(isEqual(rVec.z(), xScale.z));
     }
 
     {
 	ref::Vec3 rVec(1.0, 2.0, 3.0);
 	xbb::Translation xTrans(rVec);
-	REQUIRE(rVec.x() == xTrans.x);
-	REQUIRE(rVec.y() == xTrans.y);
-	REQUIRE(rVec.z() == xTrans.z);
+	REQUIRE(isEqual(rVec.x(), xTrans.x));
+	REQUIRE(isEqual(rVec.y(), xTrans.y));
+	REQUIRE(isEqual(rVec.z(), xTrans.z));
     }
     
     {
 	ref::Vec3 rVec(1.0, 2.0, 3.0);
 	xbb::Shear3 xShear(rVec);
-	REQUIRE(rVec.x() == xShear.x);
-	REQUIRE(rVec.y() == xShear.y);
-	REQUIRE(rVec.z() == xShear.z);
+	REQUIRE(isEqual(rVec.x(), xShear.x));
+	REQUIRE(isEqual(rVec.y(), xShear.y));
+	REQUIRE(isEqual(rVec.z(), xShear.z));
     }
     
 }
