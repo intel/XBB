@@ -27,7 +27,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "TestValues.h"
 
-TestValues TestValues::get()
+namespace {
+
+	ref::Matrix4x4 refFinalTransform;
+	xbb::Matrix4x3 xbbFinalTransform;
+
+TestValues populateTestValues()
 {
     TestValues tv;
     
@@ -79,4 +84,18 @@ TestValues TestValues::get()
     
     return tv;
 }
+
+}
+
+const TestValues & TestValues::get()
+{
+    static TestValues tv = populateTestValues();
+    return tv;
+}
+
+
+ref::Matrix4x4 *gRefFinalTransform = &refFinalTransform;
+xbb::Matrix4x3 *gXbbFinalTransform = &xbbFinalTransform;
+
+
 

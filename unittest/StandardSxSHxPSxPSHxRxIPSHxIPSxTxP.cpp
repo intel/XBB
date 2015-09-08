@@ -41,8 +41,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using namespace xbb;
 
 
-static const char * sStandardSxSHxPSxPSHxRxIPSHxIPSxTxPName = "Standard S*SH*PS*PSH*R*IPSH*IPS*T*P";
-TEST_CASE(sStandardSxSHxPSxPSHxRxIPSHxIPSxTxPName, "")
+static const char * sStandardSxSHxPSxPSHxRxIPSHxIPSxTxPBestCaseName = "Standard S*SH*PS*PSH*R*IPSH*IPS*T*P (best case)";
+TEST_CASE(sStandardSxSHxPSxPSHxRxIPSHxIPSxTxPBestCaseName, "")
 {
     // time composing S*SH*R*T with reference vs XBB
     volatile TestValues tv = TestValues::get();
@@ -50,7 +50,6 @@ TEST_CASE(sStandardSxSHxPSxPSHxRxIPSHxIPSxTxPName, "")
     const int repeatCount = 10000000;
     //const int repeatCount = 1;
     
-    ref::Matrix4x4 refFinalTransform;
     // Compose a transform using traditional OO approach
     double refTime = 0.0;
     {
@@ -82,20 +81,23 @@ TEST_CASE(sStandardSxSHxPSxPSHxRxIPSHxIPSxTxPName, "")
                 ref::Matrix4x4 PSH;
                 PSH.makeShear3(tv.parentShearX, tv.parentShearY, tv.parentShearZ);
 
+                // const_cast is to remove the volatile
+                const ref::Matrix4x4 & P = const_cast<const ref::Matrix4x4 &>(tv.parentWorld);
+
+                // NOTE: if fully inlined, a compiler could do a pretty decent job
+                // taking advantage of compile time constants from the "make???" routines.
+
                 // Small optimization so we only have to call inverse once
                 ref::Matrix4x4 PSPSH = PS*PSH;
                 ref::Matrix4x4 IPSPSH = PSPSH.inverse();
                 
-                ref::Matrix4x4 & P = *const_cast<ref::Matrix4x4 *>(&tv.parentWorld);
                 
-                refFinalTransform = S*SH*PSPSH*Rz*Ry*Rx*IPSPSH*T*P;
-                //refFinalTransform = S*SH*PSPSH*Rz*Ry*Rx*T;
+                *gRefFinalTransform = S*SH*PSPSH*Rz*Ry*Rx*IPSPSH*T*P;
             }
         }
     }
     
     // Compose a transform using XBB
-    xbb::Matrix4x3 xbbFinalTransform;
     double xbbTime = 0.0;
     {
         ScopedTimer timer(xbbTime);
@@ -116,20 +118,188 @@ TEST_CASE(sStandardSxSHxPSxPSHxRxIPSHxIPSxTxPName, "")
                 auto PSPSH = PS*PSH;
                 auto IPSPSH = PSPSH.inverse();
                 
-                xbb::ProxyMatrix4x3<ref::Matrix4x4> P(*const_cast<ref::Matrix4x4 *>(&tv.parentWorld));
-
+                // const_cast is to remove the volatile
+                const ref::Matrix4x4 & refP = const_cast<const ref::Matrix4x4 &>(tv.parentWorld);
+                const xbb::ProxyMatrix4x3<ref::Matrix4x4> P(refP);
                 
 
-                (S*SH*PSPSH*Rz*Ry*Rx*IPSPSH*T*P).to(xbbFinalTransform);
+                (S*SH*PSPSH*Rz*Ry*Rx*IPSPSH*T*P).to(*gXbbFinalTransform);
             }
         }
     }
         
     
-    std::cout << sStandardSxSHxPSxPSHxRxIPSHxIPSxTxPName << ":"<< std::endl;
-    //std::cout << "Ref Transform " << refFinalTransform << std::endl;
-    //std::cout << "xbb Transform " << xbbFinalTransform << std::endl;
-    TRANSFORMS_ARE_CLOSE(xbbFinalTransform, refFinalTransform);
+    std::cout << sStandardSxSHxPSxPSHxRxIPSHxIPSxTxPBestCaseName << ":"<< std::endl;
+    //std::cout << "Ref Transform " << *gRefFinalTransform << std::endl;
+    //std::cout << "xbb Transform " << *gXbbFinalTransform << std::endl;
+    TRANSFORMS_ARE_CLOSE(*gXbbFinalTransform, *gRefFinalTransform);
+    
+    std::cout << "    ref Time " << refTime << std::endl;
+    std::cout << "    xbb Time " << xbbTime << std::endl;
+    std::cout << "    speedup " << refTime/xbbTime << "x" << std::endl << std::endl;
+}
+
+
+
+
+namespace {
+
+__attribute__((noinline)) void multiplySxSHxPSxPSHxRzxRyxRxxIPSPSHxT(
+    ref::Matrix4x4 & result, 
+    const ref::Matrix4x4 & S, 
+    const ref::Matrix4x4 & SH, 
+    const ref::Matrix4x4 & Rz, 
+    const ref::Matrix4x4 & Ry, 
+    const ref::Matrix4x4 & Rx, 
+    const ref::Matrix4x4 & T,
+    const ref::Matrix4x4 & PS, 
+    const ref::Matrix4x4 & PSH,
+    const ref::Matrix4x4 & P
+);
+
+__attribute__((noinline)) void multiplySxSHxPSxPSHxRzxRyxRxxIPSPSHxT(
+    xbb::Matrix4x3 & result,
+    const xbb::Scale & S,
+    const xbb::Shear3 & SH,
+    const xbb::RotationZ & Rz,
+    const xbb::RotationY & Ry,
+    const xbb::RotationX & Rx,
+    const xbb::Translation & T,
+    const xbb::Scale & PS,
+    const xbb::Shear3 & PSH,
+    const xbb::ProxyMatrix4x3<ref::Matrix4x4> & P
+);
+
+void multiplySxSHxPSxPSHxRzxRyxRxxIPSPSHxT(
+    ref::Matrix4x4 & result, 
+    const ref::Matrix4x4 & S, 
+    const ref::Matrix4x4 & SH, 
+    const ref::Matrix4x4 & Rz, 
+    const ref::Matrix4x4 & Ry, 
+    const ref::Matrix4x4 & Rx, 
+    const ref::Matrix4x4 & T,
+    const ref::Matrix4x4 & PS, 
+    const ref::Matrix4x4 & PSH,
+    const ref::Matrix4x4 & P)
+{
+    XBB_INLINE_BLOCK
+    {                    
+        // Small optimization so we only have to call inverse once
+        ref::Matrix4x4 PSPSH = PS*PSH;
+        ref::Matrix4x4 IPSPSH = PSPSH.inverse();
+
+        result = S*SH*PSPSH*Rz*Ry*Rx*IPSPSH*T*P;
+    }
+}
+    
+
+void multiplySxSHxPSxPSHxRzxRyxRxxIPSPSHxT(
+    xbb::Matrix4x3 & result,
+    const xbb::Scale & S,
+    const xbb::Shear3 & SH,
+    const xbb::RotationZ & Rz,
+    const xbb::RotationY & Ry,
+    const xbb::RotationX & Rx,
+    const xbb::Translation & T,
+    const xbb::Scale & PS,
+    const xbb::Shear3 & PSH,
+    const xbb::ProxyMatrix4x3<ref::Matrix4x4> & P)
+{
+    XBB_INLINE_BLOCK
+    {                    
+        auto PSPSH = PS*PSH;
+        auto IPSPSH = PSPSH.inverse();
+
+        (S*SH*PSPSH*Rz*Ry*Rx*IPSPSH*T*P).to(result);
+    }
+}
+
+}
+
+
+static const char * sStandardSxSHxPSxPSHxRxIPSHxIPSxTxPWorstCaseName = "Standard S*SH*PS*PSH*R*IPSH*IPS*T*P (worst case)";
+TEST_CASE(sStandardSxSHxPSxPSHxRxIPSHxIPSxTxPWorstCaseName, "")
+{
+    // time composing S*SH*R*T with reference vs XBB
+    volatile TestValues tv = TestValues::get();
+
+    const int repeatCount = 10000000;
+    //const int repeatCount = 1;
+    
+    // Compose a transform using traditional OO approach
+    double refTime = 0.0;
+    {
+        ScopedTimer timer(refTime);
+        for (int rep=0; rep < repeatCount; ++rep) {
+            XBB_INLINE_BLOCK
+            {                    
+                ref::Matrix4x4 S;
+                S.makeScale(tv.scaleX, tv.scaleY, tv.scaleZ);
+
+                ref::Matrix4x4 SH;
+                SH.makeShear3(tv.shearX, tv.shearY, tv.shearZ);
+
+                ref::Matrix4x4 Rx;
+                Rx.makeRotationX(tv.rotX);
+
+                ref::Matrix4x4 Ry;
+                Ry.makeRotationY(tv.rotY);
+
+                ref::Matrix4x4 Rz;
+                Rz.makeRotationZ(tv.rotZ);
+
+                ref::Matrix4x4 T;
+                T.makeTranslation(tv.translateX, tv.translateY, tv.translateZ);
+
+                ref::Matrix4x4 PS;
+                PS.makeScale(tv.parentScaleX, tv.parentScaleY, tv.parentScaleZ);
+
+                ref::Matrix4x4 PSH;
+                PSH.makeShear3(tv.parentShearX, tv.parentShearY, tv.parentShearZ);
+
+                // const_cast is to remove the volatile
+                const ref::Matrix4x4 & P = const_cast<const ref::Matrix4x4 &>(tv.parentWorld);
+                
+                // NOTE: what we found in practice is 4x4 matrices being passed to functions
+                // where the optimizer doesn't know the 0's or 1's.
+                // So this represents a worst case scenario.
+                multiplySxSHxPSxPSHxRzxRyxRxxIPSPSHxT(*gRefFinalTransform, S, SH, Rz, Ry, Rx, T, PS , PSH, P);
+            }
+        }
+    }
+    
+    // Compose a transform using XBB
+    double xbbTime = 0.0;
+    {
+        ScopedTimer timer(xbbTime);
+        for (int rep=0; rep < repeatCount; ++rep) {
+
+            XBB_INLINE_BLOCK
+            {                    
+                xbb::Scale S(tv.scaleX, tv.scaleY, tv.scaleZ);
+                xbb::Shear3 SH(tv.shearX, tv.shearY, tv.shearZ);
+                xbb::RotationX Rx(tv.rotX);
+                xbb::RotationY Ry(tv.rotY);
+                xbb::RotationZ Rz(tv.rotZ);
+                xbb::Translation T(tv.translateX, tv.translateY, tv.translateZ);    
+                
+                xbb::Scale PS(tv.parentScaleX, tv.parentScaleY, tv.parentScaleZ);
+                xbb::Shear3 PSH(tv.parentShearX, tv.parentShearY, tv.parentShearZ);
+                
+                // const_cast is to remove the volatile
+                const ref::Matrix4x4 & refP = const_cast<const ref::Matrix4x4 &>(tv.parentWorld);
+                const xbb::ProxyMatrix4x3<ref::Matrix4x4> P(refP);
+               
+		        multiplySxSHxPSxPSHxRzxRyxRxxIPSPSHxT(*gXbbFinalTransform, S, SH, Rz, Ry, Rx, T, PS , PSH, P);
+            }
+        }
+    }
+        
+    
+    std::cout << sStandardSxSHxPSxPSHxRxIPSHxIPSxTxPWorstCaseName << ":"<< std::endl;
+    //std::cout << "Ref Transform " << *gRefFinalTransform << std::endl;
+    //std::cout << "xbb Transform " << *gXbbFinalTransform << std::endl;
+    TRANSFORMS_ARE_CLOSE(*gXbbFinalTransform, *gRefFinalTransform);
     
     std::cout << "    ref Time " << refTime << std::endl;
     std::cout << "    xbb Time " << xbbTime << std::endl;

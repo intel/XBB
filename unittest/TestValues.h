@@ -38,7 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // values are not known at compile time and we don't want an unfair advantage
 struct TestValues
 {
-    static TestValues get();
+    static __attribute__((noinline)) const TestValues & get();
 
     
     double scaleX, scaleY, scaleZ;    
@@ -54,6 +54,15 @@ struct TestValues
     
     ref::Matrix4x4 parentWorld;
 };
+
+// We can put computations in a loop but the compiler may skip them 
+// unless the result appears to be used somehow.
+// So we place results in a global transform, then compiler can't assume that 
+// another thread or something isn't using/watching that memory location.
+// This appears to be less overhead than calling a mock function
+extern ref::Matrix4x4 *gRefFinalTransform;
+extern xbb::Matrix4x3 *gXbbFinalTransform;
+
 
 #endif // TEST_VALUES_H
 

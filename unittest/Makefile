@@ -26,8 +26,10 @@
 #CXX=icpc
 #LD=icpc
 
-CXX=/opt/rh/devtoolset-2/root/usr/bin/g++
-LD=/opt/rh/devtoolset-2/root/usr/bin/g++
+#CXX=/opt/rh/devtoolset-2/root/usr/bin/g++
+#LD=/opt/rh/devtoolset-2/root/usr/bin/g++
+CXX=g++
+LD=g++
 
 RM=rm -rf
 OUT_DIR=bin
@@ -46,7 +48,6 @@ VECREPORT_CPPFLAGS = -vec-report6 -mP2OPT_hpo_emit_align_diagnostic_for_cpu
 
 ICC_CPPFLAGS = $(AUTO_DEPS_CPPFLAGS) \
     -isystem./ \
-    -isystem/rel/third_party/intelcompiler64/composer_xe/composer_xe_2013_sp1.2.144/tbb/include \
     -I../include \
     -std=c++0x \
     -g \
@@ -55,12 +56,11 @@ ICC_CPPFLAGS = $(AUTO_DEPS_CPPFLAGS) \
     -debug inline-debug-info \
     -restrict \
     -Wno-deprecated -w2 -Wall -Wremarks -Wcheck -wd191 -wd304 -wd383 \
-    -wd444 -wd981 -wd1418 -wd1875 -wd593 -wd177 -wd3218 -wd3346 \
+    -wd444 -wd981 -wd1418 -wd1875 -wd593 -wd177 -wd3218 -wd3346 -wd11074 -wd11076 \
     -Qoption,cpp,--print_include_stack 
 
 GCC_CPPFLAGS = $(AUTO_DEPS_CPPFLAGS) \
     -isystem./ \
-    -isystem/rel/third_party/intelcompiler64/composer_xe/composer_xe_2013_sp1.2.144/tbb/include \
     -I../include \
     -std=c++0x \
     -g \

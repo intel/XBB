@@ -28,23 +28,24 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef XBB_UNITTEST_SCOPED_TIMER_H
 #define XBB_UNITTEST_SCOPED_TIMER_H
 
-#include <tbb/tick_count.h>
+#include <chrono>
 
 struct ScopedTimer
 {
 private:
     double & mElapsedSeconds;
-    tbb::tick_count mStart;
+    std::chrono::time_point<std::chrono::system_clock> mStart;
 public:
     ScopedTimer(double & iElapsedSeconds) 
             : mElapsedSeconds(iElapsedSeconds)
-            , mStart(tbb::tick_count::now())
+            , mStart(std::chrono::system_clock::now())
     {
     }
 
     ~ScopedTimer() {
-        tbb::tick_count end = tbb::tick_count::now();
-        mElapsedSeconds = (end-mStart).seconds();
+        std::chrono::time_point<std::chrono::system_clock> end = std::chrono::system_clock::now();
+        std::chrono::duration<double> elapsedSeconds = end-mStart;
+        mElapsedSeconds = elapsedSeconds.count();
     }
 };
 
